@@ -1,5 +1,5 @@
 //import styles
-import { StyleSheet, Platform, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Platform, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { ThemedView } from '@/components/ThemedView';
@@ -7,6 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ScrollView } from 'react-native-gesture-handler';
 import { supabase } from '@/utils/supabase';
 import { Habit, Task } from '@/utils/supabase';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
 import {
     useAudioRecorder,
     AudioModule,
@@ -29,13 +31,34 @@ export default function Home() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcription, setTranscription] = useState('');
 
-    const micButtonColor = useThemeColor(
-        { light: '#A1CEDC', dark: '#1D3D47' },
+    // Use consistent color palette
+    const backgroundColor = useThemeColor(
+        { light: Colors.light.background, dark: Colors.dark.background },
+        'background'
+    );
+    const surfaceColor = useThemeColor(
+        { light: Colors.light.surface, dark: Colors.dark.surface },
+        'surface'
+    );
+    const textColor = useThemeColor(
+        { light: Colors.light.text, dark: Colors.dark.text },
+        'text'
+    );
+    const textSecondaryColor = useThemeColor(
+        { light: Colors.light.textSecondary, dark: Colors.dark.textSecondary },
+        'textSecondary'
+    );
+    const tintColor = useThemeColor(
+        { light: Colors.light.tint, dark: Colors.dark.tint },
         'tint'
     );
-    const micButtonTextColor = useThemeColor(
-        { light: '#FFFFFF', dark: '#FFFFFF' },
-        'text'
+    const iconColor = useThemeColor(
+        { light: Colors.light.icon, dark: Colors.dark.icon },
+        'icon'
+    );
+    const borderColor = useThemeColor(
+        { light: Colors.light.border, dark: Colors.dark.border },
+        'border'
     );
 
     useEffect(() => {
@@ -223,37 +246,128 @@ export default function Home() {
         }
     };
     return (
-        <ThemedView style={styles.container}>
-            <ThemedView style={styles.header}>
-                <ThemedView style={styles.greeting}>
-                    <ThemedText type="title">Hello, User!</ThemedText>
-                    <ThemedText type="subtitle">
+        <ThemedView style={[styles.container, { backgroundColor }]}>
+            <ThemedView style={[styles.header, { backgroundColor: surfaceColor, borderBottomColor: borderColor }]}>
+                <ThemedView style={[styles.greeting, { backgroundColor: surfaceColor }]}>
+                    <ThemedText type="title" style={[styles.headerTitle, { color: Colors.light.text }]}>
+                        Hello, User! 👋
+                    </ThemedText>
+                    <ThemedText type="subtitle" style={[styles.headerSubtitle, { color: Colors.light.text, opacity: 0.85 }]}>
                         Here's your daily overview
                     </ThemedText>
                 </ThemedView>
             </ThemedView>
-            <ScrollView style={styles.mainContent}>
-                <ThemedView style={styles.habitsContainer}>
-                    <ThemedText type="title">Habits</ThemedText>
-                    {habits.map((habit) => (
-                        <ThemedView key={habit.id} style={styles.habitItem}>
-                            <ThemedText>{habit.name}</ThemedText>
+            
+            <ScrollView 
+                style={styles.mainContent}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}
+            >
+                <ThemedView style={styles.section}>
+                    <ThemedView style={styles.sectionHeader}>
+                        <MaterialIcons name="task-alt" size={24} color={iconColor} />
+                        <ThemedText type="title" style={[styles.sectionTitle, { color: textColor }]}>
+                            Habits
+                        </ThemedText>
+                    </ThemedView>
+                    {habits.length === 0 ? (
+                        <ThemedView style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor: borderColor }]}>
+                            <ThemedText style={[styles.emptyText, { color: textSecondaryColor }]}>
+                                No habits yet. Add one using voice commands!
+                            </ThemedText>
                         </ThemedView>
-                    ))}
+                    ) : (
+                        habits.map((habit) => (
+                            <TouchableOpacity 
+                                key={habit.id} 
+                                style={[styles.item, { backgroundColor: surfaceColor, borderColor: borderColor }]}
+                                onPress={() => toggleHabit(habit.id)}
+                            >
+                                <MaterialIcons 
+                                    name={habit.completed ? "check-circle" : "radio-button-unchecked"} 
+                                    size={24} 
+                                    color={habit.completed ? Colors.light.success : Colors.light.tabIconDefault} 
+                                />
+                                <ThemedText style={[
+                                    styles.itemText, 
+                                    { color: textColor },
+                                    habit.completed && styles.completedText
+                                ]}>
+                                    {habit.name}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        ))
+                    )}
                 </ThemedView>
-                <ThemedView style={styles.tasksContainer}>
-                    <ThemedText type="title">Tasks</ThemedText>
-                    {tasks.map((task) => (
-                        <ThemedView key={task.id} style={styles.taskItem}>
-                            <ThemedText>{task.name}</ThemedText>
+
+                <ThemedView style={styles.section}>
+                    <ThemedView style={styles.sectionHeader}>
+                        <MaterialIcons name="assignment" size={24} color={iconColor} />
+                        <ThemedText type="title" style={[styles.sectionTitle, { color: textColor }]}>
+                            Tasks
+                        </ThemedText>
+                    </ThemedView>
+                    {tasks.length === 0 ? (
+                        <ThemedView style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor: borderColor }]}>
+                            <ThemedText style={[styles.emptyText, { color: textSecondaryColor }]}>
+                                No tasks yet. Add one using voice commands!
+                            </ThemedText>
                         </ThemedView>
-                    ))}
+                    ) : (
+                        tasks.map((task) => (
+                            <TouchableOpacity 
+                                key={task.id} 
+                                style={[styles.item, { backgroundColor: surfaceColor, borderColor: borderColor }]}
+                                onPress={() => toggleTask(task.id)}
+                            >
+                                <MaterialIcons 
+                                    name={task.completed ? "check-circle" : "radio-button-unchecked"} 
+                                    size={24} 
+                                    color={task.completed ? Colors.light.success : Colors.light.tabIconDefault} 
+                                />
+                                <ThemedText style={[
+                                    styles.itemText, 
+                                    { color: textColor },
+                                    task.completed && styles.completedText
+                                ]}>
+                                    {task.name}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        ))
+                    )}
                 </ThemedView>
             </ScrollView>
 
-            <TouchableOpacity style={styles.micButton} onPress={handleMicPress}>
-                <ThemedText style={styles.micButtonText}>🎤</ThemedText>
+            <TouchableOpacity 
+                style={[
+                    styles.micButton, 
+                    { 
+                        backgroundColor: isListening ? Colors.light.secondary : tintColor,
+                        shadowColor: tintColor,
+                    }
+                ]} 
+                onPress={handleMicPress}
+                disabled={isProcessing}
+            >
+                {isProcessing ? (
+                    <MaterialIcons name="hourglass-empty" size={28} color={Colors.light.surface} />
+                ) : (
+                    <MaterialIcons 
+                        name={isListening ? "mic" : "mic-none"} 
+                        size={28} 
+                        color={Colors.light.surface} 
+                    />
+                )}
             </TouchableOpacity>
+            
+            {isListening && (
+                <ThemedView style={[styles.listeningIndicator, { backgroundColor: tintColor + "20", borderColor: tintColor + "40" }]}>
+                    <MaterialIcons name="hearing" size={20} color={tintColor} />
+                    <ThemedText style={[styles.listeningText, { color: tintColor }]}>
+                        Listening...
+                    </ThemedText>
+                </ThemedView>
+            )}
         </ThemedView>
     );
 }
@@ -261,19 +375,122 @@ export default function Home() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
     },
     header: {
-        padding: 16,
-        backgroundColor: '#6200EE',
+        paddingTop: Platform.OS === 'ios' ? 60 : 50,
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
     },
     greeting: {
-        marginBottom: 8,
+        marginBottom: 0,
+
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 4,
+        letterSpacing: 0.5,
+    },
+    headerSubtitle: {
+        fontSize: 15,
+        fontWeight: '500',
+        letterSpacing: 0.2,
     },
     mainContent: {
         flex: 1,
-        padding: 16,
+        paddingHorizontal: 20,
     },
+    scrollContainer: {
+        paddingTop: 20,
+        paddingBottom: 100,
+    },
+    section: {
+        marginBottom: 32,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        gap: 8,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+    },
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        marginBottom: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        gap: 12,
+    },
+    itemText: {
+        flex: 1,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    completedText: {
+        textDecorationLine: 'line-through',
+        opacity: 0.6,
+    },
+    emptyState: {
+        padding: 24,
+        borderRadius: 12,
+        borderWidth: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+    },
+    emptyText: {
+        fontSize: 16,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    micButton: {
+        position: 'absolute',
+        bottom: 32,
+        right: 32,
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    listeningIndicator: {
+        position: 'absolute',
+        bottom: 110,
+        right: 32,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        gap: 6,
+    },
+    listeningText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    // Legacy styles - can be removed later
     habitsContainer: {
         marginBottom: 24,
     },
@@ -289,17 +506,6 @@ const styles = StyleSheet.create({
         padding: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-    },
-    micButton: {
-        position: 'absolute',
-        bottom: 32,
-        right: 32,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#6200EE',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     micButtonText: {
         color: '#FFFFFF',
