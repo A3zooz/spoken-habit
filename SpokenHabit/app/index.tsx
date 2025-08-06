@@ -23,7 +23,7 @@ export default function LandingPage() {
                 
                 <TouchableOpacity 
                     style={styles.secondaryButton}
-                    onPress={() => router.push('/(tabs)/habits')}
+                    onPress={() => router.push('/login')}
                 >
                     <Text style={styles.secondaryButtonText}>Sign In</Text>
                 </TouchableOpacity>

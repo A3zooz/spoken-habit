@@ -1,5 +1,5 @@
 //import styles
-import { StyleSheet, Platform, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { StyleSheet, Platform, TouchableOpacity, Alert, Dimensions, Modal, TextInput } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { ThemedView } from '@/components/ThemedView';
@@ -30,6 +30,9 @@ export default function Home() {
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcription, setTranscription] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [realtimeTranscription, setRealtimeTranscription] = useState('');
+    const [editableCommand, setEditableCommand] = useState('');
 
     // Use consistent color palette
     const backgroundColor = useThemeColor(
@@ -93,37 +96,42 @@ export default function Home() {
     });
 
     useSpeechRecognitionEvent('result', (result) => {
-        if(result.isFinal)
-        {
-            setTranscription(result.results[0]?.transcript || '');
-            handleSubmission(result.results[0]?.transcript || '');
+        const transcript = result.results[0]?.transcript || '';
+        setRealtimeTranscription(transcript);
+        
+        if(result.isFinal) {
+            setTranscription(transcript);
+            setEditableCommand(transcript);
+            setIsListening(false);
         }
     });
 
-    const handleSubmission = async (transcription: string) => {
-        if (transcription.trim()) {
-            Alert.alert('Transcription', transcription, [
-                {
-                    text: 'OK',
-                    onPress: async () => {
-                        const { data, error } = await supabase.functions.invoke('voice-worker', {
-                            body: { transcription: transcription },
-                        });
-                        console.log('Function response:', data);
-                        if(data){
-                            addToDatabase(data);
-                        }
-                        if (error) {
-                            console.error('Error invoking function:', error);
-                            Alert.alert('Error', 'Failed to process voice command.');
-                        }
-                        setTranscription('');
-                        setIsListening(false);
-                    }
+    const handleSubmission = async (command: string) => {
+        if (command.trim()) {
+            try {
+                const { data, error } = await supabase.functions.invoke('voice-worker', {
+                    body: { transcription: command },
+                });
+                console.log('Function response:', data);
+                if(data){
+                    await addToDatabase(data);
+                    await fetchHabits();
+                    await fetchTasks();
                 }
-            ]);
+                if (error) {
+                    console.error('Error invoking function:', error);
+                    Alert.alert('Error', 'Failed to process voice command.');
+                }
+                setTranscription('');
+                setEditableCommand('');
+                setRealtimeTranscription('');
+                setShowModal(false);
+            } catch (error) {
+                console.error('Error processing command:', error);
+                Alert.alert('Error', 'Failed to process command.');
+            }
         }
-    }
+    };
 
     const addToDatabase = async (data: any) => {
         if (data.action === 'add_habit') {
@@ -212,19 +220,12 @@ export default function Home() {
     const handleMicPress = async () => {
         if (isListening) {
             await ExpoSpeechRecognitionModule.stop();
-            if (transcription.trim()) {
-                Alert.alert('Transcription', transcription, [
-                    {
-                        text: 'OK',
-                        onPress: () => console.log('OK Pressed'),
-                    },
-                ]);
-            }
             setIsListening(false);
         } else {
             try {
                 setIsProcessing(true);
-                setTranscription('');
+                setRealtimeTranscription('');
+                setEditableCommand('');
                 setIsListening(true);
                 await ExpoSpeechRecognitionModule.start({
                     lang: 'en-US',
@@ -245,14 +246,34 @@ export default function Home() {
             }
         }
     };
+
+    const handlePlusPress = () => {
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        if (isListening) {
+            ExpoSpeechRecognitionModule.stop();
+            setIsListening(false);
+        }
+        setShowModal(false);
+        setRealtimeTranscription('');
+        setEditableCommand('');
+    };
+
+    const handleConfirmCommand = () => {
+        if (editableCommand.trim()) {
+            handleSubmission(editableCommand);
+        }
+    };
     return (
         <ThemedView style={[styles.container, { backgroundColor }]}>
             <ThemedView style={[styles.header, { backgroundColor: surfaceColor, borderBottomColor: borderColor }]}>
                 <ThemedView style={[styles.greeting, { backgroundColor: surfaceColor }]}>
-                    <ThemedText type="title" style={[styles.headerTitle, { color: Colors.light.text }]}>
+                    <ThemedText type="title" style={[styles.headerTitle, { color: textColor }]}>
                         Hello, User! 👋
                     </ThemedText>
-                    <ThemedText type="subtitle" style={[styles.headerSubtitle, { color: Colors.light.text, opacity: 0.85 }]}>
+                    <ThemedText type="subtitle" style={[styles.headerSubtitle, { color: textColor, opacity: 0.85 }]}>
                         Here's your daily overview
                     </ThemedText>
                 </ThemedView>
@@ -263,7 +284,7 @@ export default function Home() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContainer}
             >
-                <ThemedView style={styles.section}>
+                {/* <ThemedView style={styles.section}>
                     <ThemedView style={styles.sectionHeader}>
                         <MaterialIcons name="task-alt" size={24} color={iconColor} />
                         <ThemedText type="title" style={[styles.sectionTitle, { color: textColor }]}>
@@ -298,9 +319,9 @@ export default function Home() {
                             </TouchableOpacity>
                         ))
                     )}
-                </ThemedView>
+                </ThemedView> */}
 
-                {/* <ThemedView style={styles.section}>
+                <ThemedView style={styles.section}>
                     <ThemedView style={styles.sectionHeader}>
                         <MaterialIcons name="assignment" size={24} color={iconColor} />
                         <ThemedText type="title" style={[styles.sectionTitle, { color: textColor }]}>
@@ -323,7 +344,7 @@ export default function Home() {
                                 <MaterialIcons 
                                     name={task.completed ? "check-circle" : "radio-button-unchecked"} 
                                     size={24} 
-                                    color={task.completed ? Colors.light.success : Colors.light.tabIconDefault} 
+                                    color={task.completed ? Colors.light.success : iconColor} 
                                 />
                                 <ThemedText style={[
                                     styles.itemText, 
@@ -335,30 +356,110 @@ export default function Home() {
                             </TouchableOpacity>
                         ))
                     )}
-                </ThemedView> */}
-            </ScrollView> 
+                </ThemedView>
+            </ScrollView>
 
             <TouchableOpacity 
                 style={[
-                    styles.micButton, 
+                    styles.plusButton, 
                     { 
-                        backgroundColor: isListening ? Colors.light.secondary : tintColor,
+                        backgroundColor: tintColor,
                         shadowColor: tintColor,
                     }
                 ]} 
-                onPress={handleMicPress}
-                disabled={isProcessing}
+                onPress={handlePlusPress}
             >
-                {isProcessing ? (
-                    <MaterialIcons name="hourglass-empty" size={28} color={Colors.light.surface} />
-                ) : (
-                    <MaterialIcons 
-                        name={isListening ? "mic" : "mic-none"} 
-                        size={28} 
-                        color={Colors.light.surface} 
-                    />
-                )}
+                <MaterialIcons 
+                    name="add" 
+                    size={32} 
+                    color={surfaceColor} 
+                />
             </TouchableOpacity>
+
+            {/* Voice Command Modal */}
+            <Modal
+                visible={showModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={handleCloseModal}
+            >
+                <ThemedView style={[styles.modalOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+                    <ThemedView style={[styles.modalContent, { backgroundColor: surfaceColor, borderColor: borderColor }]}>
+                        <ThemedView style={styles.modalHeader}>
+                            <ThemedText type="title" style={[styles.modalTitle, { color: textColor }]}>
+                                Voice Command
+                            </ThemedText>
+                            <TouchableOpacity onPress={handleCloseModal}>
+                                <MaterialIcons name="close" size={24} color={iconColor} />
+                            </TouchableOpacity>
+                        </ThemedView>
+
+                        {/* Real-time transcription display */}
+                        {(isListening || realtimeTranscription) && (
+                            <ThemedView style={[styles.transcriptionContainer, { backgroundColor: backgroundColor, borderColor: borderColor }]}>
+                                <ThemedText style={[styles.transcriptionLabel, { color: textSecondaryColor }]}>
+                                    {isListening ? 'Listening...' : 'Heard:'}
+                                </ThemedText>
+                                <ThemedText style={[styles.transcriptionText, { color: textColor }]}>
+                                    {realtimeTranscription || 'Say something...'}
+                                </ThemedText>
+                            </ThemedView>
+                        )}
+
+                        {/* Microphone button in modal */}
+                        <TouchableOpacity 
+                            style={[
+                                styles.modalMicButton, 
+                                { 
+                                    backgroundColor: isListening ? Colors.light.secondary : tintColor,
+                                    shadowColor: tintColor,
+                                }
+                            ]} 
+                            onPress={handleMicPress}
+                            disabled={isProcessing}
+                        >
+                            {isProcessing ? (
+                                <MaterialIcons name="hourglass-empty" size={32} color={surfaceColor} />
+                            ) : (
+                                <MaterialIcons 
+                                    name={isListening ? "mic" : "mic-none"} 
+                                    size={32} 
+                                    color={surfaceColor} 
+                                />
+                            )}
+                        </TouchableOpacity>
+
+                        {/* Editable command input */}
+                        {editableCommand && (
+                            <ThemedView style={styles.editSection}>
+                                <ThemedText style={[styles.editLabel, { color: textSecondaryColor }]}>
+                                    Edit command:
+                                </ThemedText>
+                                <TextInput
+                                    style={[styles.commandInput, { 
+                                        backgroundColor: backgroundColor, 
+                                        borderColor: borderColor, 
+                                        color: textColor 
+                                    }]}
+                                    value={editableCommand}
+                                    onChangeText={setEditableCommand}
+                                    placeholder="Enter your command..."
+                                    placeholderTextColor={textSecondaryColor}
+                                    multiline
+                                />
+                                <TouchableOpacity 
+                                    style={[styles.confirmButton, { backgroundColor: tintColor }]}
+                                    onPress={handleConfirmCommand}
+                                >
+                                    <ThemedText style={[styles.confirmButtonText, { color: surfaceColor }]}>
+                                        Confirm Command
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </ThemedView>
+                        )}
+                    </ThemedView>
+                </ThemedView>
+            </Modal>
             
             {isListening && (
                 <ThemedView style={[styles.listeningIndicator, { backgroundColor: tintColor + "20", borderColor: tintColor + "40" }]}>
@@ -460,7 +561,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontStyle: 'italic',
     },
-    micButton: {
+    plusButton: {
         position: 'absolute',
         bottom: 32,
         right: 32,
@@ -473,6 +574,92 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        width: '90%',
+        maxWidth: 400,
+        borderRadius: 20,
+        padding: 24,
+        borderWidth: 1,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+    },
+    transcriptionContainer: {
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        marginBottom: 20,
+        minHeight: 80,
+    },
+    transcriptionLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    transcriptionText: {
+        fontSize: 16,
+        lineHeight: 22,
+        minHeight: 22,
+    },
+    modalMicButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: 20,
+        elevation: 6,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+    },
+    editSection: {
+        marginTop: 16,
+    },
+    editLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    commandInput: {
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 16,
+        minHeight: 80,
+        textAlignVertical: 'top',
+        marginBottom: 16,
+    },
+    confirmButton: {
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    confirmButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
     listeningIndicator: {
         position: 'absolute',
