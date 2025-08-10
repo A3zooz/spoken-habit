@@ -1,27 +1,47 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AuthContext } from '@/utils/authContext';
 
 export default function LandingPage() {
     const router = useRouter();
-
+    const authContext = useContext(AuthContext);
+    useEffect(() => {
+        if (authContext?.isReady) {
+            if (authContext.isAuthenticated) {
+                // User is authenticated, redirect to protected area
+                router.replace('/(protected)/(tabs)/todos');
+            }
+            // If not authenticated, stay on landing page
+        }
+    }, [authContext?.isReady, authContext?.isAuthenticated]);
+    if (!authContext?.isReady) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center' }]}>
+                <Text style={styles.title}>Loading...</Text>
+            </View>
+        );
+    }
     return (
         <View style={styles.container}>
             <View style={styles.content}>
                 <Text style={styles.title}>SpokenHabit</Text>
-                <Text style={styles.subtitle}>Build better speaking habits</Text>
-                <Text style={styles.description}>
-                    Practice and improve your speaking skills with personalized exercises and feedback.
+                <Text style={styles.subtitle}>
+                    Build better speaking habits
                 </Text>
-                
-                <TouchableOpacity 
+                <Text style={styles.description}>
+                    Practice and improve your speaking skills with personalized
+                    exercises and feedback.
+                </Text>
+
+                <TouchableOpacity
                     style={styles.primaryButton}
                     // onPress={() => router.push('/signup')}
                 >
                     <Text style={styles.primaryButtonText}>Get Started</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={() => router.push('/login')}
                 >

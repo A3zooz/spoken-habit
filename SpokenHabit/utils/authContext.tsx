@@ -47,6 +47,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
                     setIsAuthenticated(parsedState.isAuthenticated);
                     setUser(parsedState.user);
                     setToken(parsedState.token);
+                    console.log('Auth state loaded from storage:', parsedState);
                 }
             } catch (error) {
                 console.error('Error retrieving auth state:', error);

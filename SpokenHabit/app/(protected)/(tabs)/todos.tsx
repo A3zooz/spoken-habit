@@ -1,5 +1,13 @@
 //import styles
-import { StyleSheet, Platform, TouchableOpacity, Alert, Dimensions, Modal, TextInput } from 'react-native';
+import {
+    StyleSheet,
+    Platform,
+    TouchableOpacity,
+    Alert,
+    Dimensions,
+    Modal,
+    TextInput,
+} from 'react-native';
 import { useEffect, useState } from 'react';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { ThemedView } from '@/components/ThemedView';
@@ -20,9 +28,6 @@ import {
     ExpoSpeechRecognitionModule,
     useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
-
-
-
 
 export default function Home() {
     const [habits, setHabits] = useState<Habit[]>([]);
@@ -98,8 +103,8 @@ export default function Home() {
     useSpeechRecognitionEvent('result', (result) => {
         const transcript = result.results[0]?.transcript || '';
         setRealtimeTranscription(transcript);
-        
-        if(result.isFinal) {
+
+        if (result.isFinal) {
             setTranscription(transcript);
             setEditableCommand(transcript);
             setIsListening(false);
@@ -108,13 +113,21 @@ export default function Home() {
 
     const handleSubmission = async (command: string) => {
         if (command.trim()) {
+            const user = await supabase.auth.getUser();
+            const userId = user?.data.user?.id || null;
             try {
-                const { data, error } = await supabase.functions.invoke('voice-worker', {
-                    body: { transcription: command },
-                });
+                const { data, error } = await supabase.functions.invoke(
+                    'voice-worker',
+                    {
+                        body: {
+                            transcription: command,
+                            userId: userId,
+                            action: 'add_task',
+                        },
+                    }
+                );
                 console.log('Function response:', data);
-                if(data){
-                    await addToDatabase(data);
+                if (data) {
                     await fetchHabits();
                     await fetchTasks();
                 }
@@ -140,8 +153,7 @@ export default function Home() {
             if (error) {
                 console.error('Error adding habit:', error);
             }
-        }
-        else if (data.action === 'add_task') {
+        } else if (data.action === 'add_task') {
             const { task } = data;
             const { error } = await supabase.from('tasks').insert([task]);
             if (error) {
@@ -204,7 +216,9 @@ export default function Home() {
     const toggleHabit = (id: number) => {
         setHabits((prevHabits) =>
             prevHabits.map((habit) =>
-                habit.id === id ? { ...habit, completed: !habit.completed } : habit
+                habit.id === id
+                    ? { ...habit, completed: !habit.completed }
+                    : habit
             )
         );
     };
@@ -268,18 +282,37 @@ export default function Home() {
     };
     return (
         <ThemedView style={[styles.container, { backgroundColor }]}>
-            <ThemedView style={[styles.header, { backgroundColor: surfaceColor, borderBottomColor: borderColor }]}>
-                <ThemedView style={[styles.greeting, { backgroundColor: surfaceColor }]}>
-                    <ThemedText type="title" style={[styles.headerTitle, { color: textColor }]}>
+            <ThemedView
+                style={[
+                    styles.header,
+                    {
+                        backgroundColor: surfaceColor,
+                        borderBottomColor: borderColor,
+                    },
+                ]}
+            >
+                <ThemedView
+                    style={[styles.greeting, { backgroundColor: surfaceColor }]}
+                >
+                    <ThemedText
+                        type="title"
+                        style={[styles.headerTitle, { color: textColor }]}
+                    >
                         Hello, User! 👋
                     </ThemedText>
-                    <ThemedText type="subtitle" style={[styles.headerSubtitle, { color: textColor, opacity: 0.85 }]}>
+                    <ThemedText
+                        type="subtitle"
+                        style={[
+                            styles.headerSubtitle,
+                            { color: textColor, opacity: 0.85 },
+                        ]}
+                    >
                         Here's your daily overview
                     </ThemedText>
                 </ThemedView>
             </ThemedView>
-            
-            <ScrollView 
+
+            <ScrollView
                 style={styles.mainContent}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContainer}
@@ -323,34 +356,70 @@ export default function Home() {
 
                 <ThemedView style={styles.section}>
                     <ThemedView style={styles.sectionHeader}>
-                        <MaterialIcons name="assignment" size={24} color={iconColor} />
-                        <ThemedText type="title" style={[styles.sectionTitle, { color: textColor }]}>
+                        <MaterialIcons
+                            name="assignment"
+                            size={24}
+                            color={iconColor}
+                        />
+                        <ThemedText
+                            type="title"
+                            style={[styles.sectionTitle, { color: textColor }]}
+                        >
                             Tasks
                         </ThemedText>
                     </ThemedView>
                     {tasks.length === 0 ? (
-                        <ThemedView style={[styles.emptyState, { backgroundColor: surfaceColor, borderColor: borderColor }]}>
-                            <ThemedText style={[styles.emptyText, { color: textSecondaryColor }]}>
+                        <ThemedView
+                            style={[
+                                styles.emptyState,
+                                {
+                                    backgroundColor: surfaceColor,
+                                    borderColor: borderColor,
+                                },
+                            ]}
+                        >
+                            <ThemedText
+                                style={[
+                                    styles.emptyText,
+                                    { color: textSecondaryColor },
+                                ]}
+                            >
                                 No tasks yet. Add one using voice commands!
                             </ThemedText>
                         </ThemedView>
                     ) : (
                         tasks.map((task) => (
-                            <TouchableOpacity 
-                                key={task.id} 
-                                style={[styles.item, { backgroundColor: surfaceColor, borderColor: borderColor }]}
+                            <TouchableOpacity
+                                key={task.id}
+                                style={[
+                                    styles.item,
+                                    {
+                                        backgroundColor: surfaceColor,
+                                        borderColor: borderColor,
+                                    },
+                                ]}
                                 onPress={() => toggleTask(task.id)}
                             >
-                                <MaterialIcons 
-                                    name={task.completed ? "check-circle" : "radio-button-unchecked"} 
-                                    size={24} 
-                                    color={task.completed ? Colors.light.success : iconColor} 
+                                <MaterialIcons
+                                    name={
+                                        task.completed
+                                            ? 'check-circle'
+                                            : 'radio-button-unchecked'
+                                    }
+                                    size={24}
+                                    color={
+                                        task.completed
+                                            ? Colors.light.success
+                                            : iconColor
+                                    }
                                 />
-                                <ThemedText style={[
-                                    styles.itemText, 
-                                    { color: textColor },
-                                    task.completed && styles.completedText
-                                ]}>
+                                <ThemedText
+                                    style={[
+                                        styles.itemText,
+                                        { color: textColor },
+                                        task.completed && styles.completedText,
+                                    ]}
+                                >
                                     {task.name}
                                 </ThemedText>
                             </TouchableOpacity>
@@ -359,21 +428,17 @@ export default function Home() {
                 </ThemedView>
             </ScrollView>
 
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={[
-                    styles.plusButton, 
-                    { 
+                    styles.plusButton,
+                    {
                         backgroundColor: tintColor,
                         shadowColor: tintColor,
-                    }
-                ]} 
+                    },
+                ]}
                 onPress={handlePlusPress}
             >
-                <MaterialIcons 
-                    name="add" 
-                    size={32} 
-                    color={surfaceColor} 
-                />
+                <MaterialIcons name="add" size={32} color={surfaceColor} />
             </TouchableOpacity>
 
             {/* Voice Command Modal */}
@@ -383,48 +448,96 @@ export default function Home() {
                 animationType="fade"
                 onRequestClose={handleCloseModal}
             >
-                <ThemedView style={[styles.modalOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-                    <ThemedView style={[styles.modalContent, { backgroundColor: surfaceColor, borderColor: borderColor }]}>
+                <ThemedView
+                    style={[
+                        styles.modalOverlay,
+                        { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+                    ]}
+                >
+                    <ThemedView
+                        style={[
+                            styles.modalContent,
+                            {
+                                backgroundColor: surfaceColor,
+                                borderColor: borderColor,
+                            },
+                        ]}
+                    >
                         <ThemedView style={styles.modalHeader}>
-                            <ThemedText type="title" style={[styles.modalTitle, { color: textColor }]}>
+                            <ThemedText
+                                type="title"
+                                style={[
+                                    styles.modalTitle,
+                                    { color: textColor },
+                                ]}
+                            >
                                 Voice Command
                             </ThemedText>
                             <TouchableOpacity onPress={handleCloseModal}>
-                                <MaterialIcons name="close" size={24} color={iconColor} />
+                                <MaterialIcons
+                                    name="close"
+                                    size={24}
+                                    color={iconColor}
+                                />
                             </TouchableOpacity>
                         </ThemedView>
 
                         {/* Real-time transcription display */}
                         {(isListening || realtimeTranscription) && (
-                            <ThemedView style={[styles.transcriptionContainer, { backgroundColor: backgroundColor, borderColor: borderColor }]}>
-                                <ThemedText style={[styles.transcriptionLabel, { color: textSecondaryColor }]}>
+                            <ThemedView
+                                style={[
+                                    styles.transcriptionContainer,
+                                    {
+                                        backgroundColor: backgroundColor,
+                                        borderColor: borderColor,
+                                    },
+                                ]}
+                            >
+                                <ThemedText
+                                    style={[
+                                        styles.transcriptionLabel,
+                                        { color: textSecondaryColor },
+                                    ]}
+                                >
                                     {isListening ? 'Listening...' : 'Heard:'}
                                 </ThemedText>
-                                <ThemedText style={[styles.transcriptionText, { color: textColor }]}>
-                                    {realtimeTranscription || 'Say something...'}
+                                <ThemedText
+                                    style={[
+                                        styles.transcriptionText,
+                                        { color: textColor },
+                                    ]}
+                                >
+                                    {realtimeTranscription ||
+                                        'Say something...'}
                                 </ThemedText>
                             </ThemedView>
                         )}
 
                         {/* Microphone button in modal */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={[
-                                styles.modalMicButton, 
-                                { 
-                                    backgroundColor: isListening ? Colors.light.secondary : tintColor,
+                                styles.modalMicButton,
+                                {
+                                    backgroundColor: isListening
+                                        ? Colors.light.secondary
+                                        : tintColor,
                                     shadowColor: tintColor,
-                                }
-                            ]} 
+                                },
+                            ]}
                             onPress={handleMicPress}
                             disabled={isProcessing}
                         >
                             {isProcessing ? (
-                                <MaterialIcons name="hourglass-empty" size={32} color={surfaceColor} />
+                                <MaterialIcons
+                                    name="hourglass-empty"
+                                    size={32}
+                                    color={surfaceColor}
+                                />
                             ) : (
-                                <MaterialIcons 
-                                    name={isListening ? "mic" : "mic-none"} 
-                                    size={32} 
-                                    color={surfaceColor} 
+                                <MaterialIcons
+                                    name={isListening ? 'mic' : 'mic-none'}
+                                    size={32}
+                                    color={surfaceColor}
                                 />
                             )}
                         </TouchableOpacity>
@@ -432,26 +545,42 @@ export default function Home() {
                         {/* Editable command input */}
                         {editableCommand && (
                             <ThemedView style={styles.editSection}>
-                                <ThemedText style={[styles.editLabel, { color: textSecondaryColor }]}>
+                                <ThemedText
+                                    style={[
+                                        styles.editLabel,
+                                        { color: textSecondaryColor },
+                                    ]}
+                                >
                                     Edit command:
                                 </ThemedText>
                                 <TextInput
-                                    style={[styles.commandInput, { 
-                                        backgroundColor: backgroundColor, 
-                                        borderColor: borderColor, 
-                                        color: textColor 
-                                    }]}
+                                    style={[
+                                        styles.commandInput,
+                                        {
+                                            backgroundColor: backgroundColor,
+                                            borderColor: borderColor,
+                                            color: textColor,
+                                        },
+                                    ]}
                                     value={editableCommand}
                                     onChangeText={setEditableCommand}
                                     placeholder="Enter your command..."
                                     placeholderTextColor={textSecondaryColor}
                                     multiline
                                 />
-                                <TouchableOpacity 
-                                    style={[styles.confirmButton, { backgroundColor: tintColor }]}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.confirmButton,
+                                        { backgroundColor: tintColor },
+                                    ]}
                                     onPress={handleConfirmCommand}
                                 >
-                                    <ThemedText style={[styles.confirmButtonText, { color: surfaceColor }]}>
+                                    <ThemedText
+                                        style={[
+                                            styles.confirmButtonText,
+                                            { color: surfaceColor },
+                                        ]}
+                                    >
                                         Confirm Command
                                     </ThemedText>
                                 </TouchableOpacity>
@@ -460,11 +589,21 @@ export default function Home() {
                     </ThemedView>
                 </ThemedView>
             </Modal>
-            
+
             {isListening && (
-                <ThemedView style={[styles.listeningIndicator, { backgroundColor: tintColor + "20", borderColor: tintColor + "40" }]}>
+                <ThemedView
+                    style={[
+                        styles.listeningIndicator,
+                        {
+                            backgroundColor: tintColor + '20',
+                            borderColor: tintColor + '40',
+                        },
+                    ]}
+                >
                     <MaterialIcons name="hearing" size={20} color={tintColor} />
-                    <ThemedText style={[styles.listeningText, { color: tintColor }]}>
+                    <ThemedText
+                        style={[styles.listeningText, { color: tintColor }]}
+                    >
                         Listening...
                     </ThemedText>
                 </ThemedView>
@@ -491,7 +630,6 @@ const styles = StyleSheet.create({
     },
     greeting: {
         marginBottom: 0,
-
     },
     headerTitle: {
         fontSize: 24,

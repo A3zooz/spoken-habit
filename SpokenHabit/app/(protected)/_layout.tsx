@@ -14,7 +14,9 @@ export default function ProtectedLayout() {
     login: async () => {},
     logout: async () => {},
     isAuthenticated: false,
+    isReady: false
   };
+  console.log('Auth Context:', authContext);
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
@@ -30,7 +32,8 @@ export default function ProtectedLayout() {
   }
   if(!authContext.isAuthenticated) {
     // If the user is not authenticated, redirect to login
-    <Redirect href="/login" />
+    console.log('User is not authenticated, redirecting to login');
+    return (<Redirect href="/" />);
   }
 
 

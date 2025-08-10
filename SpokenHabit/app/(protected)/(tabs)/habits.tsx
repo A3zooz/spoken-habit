@@ -115,13 +115,16 @@ export default function Home() {
     const handleSubmission = async (command: string) => {
         if (command.trim()) {
             try {
-                const { data, error } = await supabase.functions.invoke(
+                const user = await supabase.auth.getUser();
+                const userId = user?.data.user?.id || null;
+
+                const { data } = await supabase.functions.invoke(
                     'voice-worker',
                     {
                         body: {
                             transcription: command,
-                            userId:
-                                (await AsyncStorage.getItem('userId')) || null, // Ensure user ID is passed
+                            userId: userId, // Ensure user ID is passed
+                            action: 'add_habit', // Specify the action
                         },
                     }
                 );
@@ -131,10 +134,7 @@ export default function Home() {
                     // console.log('Command processed successfully database:', data);
                     await fetchHabits();
                     await fetchTasks();
-                }
-                if (error) {
-                    console.error('Error invoking function:', error);
-                    Alert.alert('Error', 'Failed to process voice command.');
+                    console.log('hey data works')
                 }
                 setTranscription('');
                 setEditableCommand('');
