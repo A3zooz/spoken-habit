@@ -67,7 +67,7 @@ export default function LoginScreen() {
 
         setIsLoading(true);
         try {
-            authcontext.login(email.trim(), password)
+            await authcontext.login(email.trim(), password)
         } catch (error) {
             Alert.alert('Error', 'An unexpected error occurred');
             console.error('Login error:', error);
