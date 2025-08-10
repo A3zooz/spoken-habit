@@ -27,25 +27,24 @@ export default function LandingPage() {
             <View style={styles.content}>
                 <Text style={styles.title}>SpokenHabit</Text>
                 <Text style={styles.subtitle}>
-                    Build better speaking habits
+                    Tracking your habits has never been easier
                 </Text>
                 <Text style={styles.description}>
-                    Practice and improve your speaking skills with personalized
-                    exercises and feedback.
+                    Speak your goals and let us help you achieve them.
                 </Text>
 
                 <TouchableOpacity
                     style={styles.primaryButton}
-                    // onPress={() => router.push('/signup')}
+                    onPress={() => router.push('/signup')}
                 >
-                    <Text style={styles.primaryButtonText}>Get Started</Text>
+                    <Text style={styles.primaryButtonText}>Sign In</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={() => router.push('/login')}
                 >
-                    <Text style={styles.secondaryButtonText}>Sign In</Text>
+                    <Text style={styles.secondaryButtonText}>Sign Up</Text>
                 </TouchableOpacity>
             </View>
         </View>
