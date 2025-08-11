@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '@/utils/authContext';
 
@@ -18,6 +18,11 @@ export default function LandingPage() {
     if (!authContext?.isReady) {
         return (
             <View style={[styles.container, { justifyContent: 'center' }]}>
+                <Image 
+                    source={require('@/assets/images/icon.png')} 
+                    style={styles.loadingIcon}
+                    resizeMode="contain"
+                />
                 <Text style={styles.title}>Loading...</Text>
             </View>
         );
@@ -25,6 +30,11 @@ export default function LandingPage() {
     return (
         <View style={styles.container}>
             <View style={styles.content}>
+                <Image 
+                    source={require('@/assets/images/icon.png')} 
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
                 <Text style={styles.title}>SpokenHabit</Text>
                 <Text style={styles.subtitle}>
                     Tracking your habits has never been easier
@@ -37,14 +47,14 @@ export default function LandingPage() {
                     style={styles.primaryButton}
                     onPress={() => router.push('/signup')}
                 >
-                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                    <Text style={styles.primaryButtonText}>Sign Up</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={() => router.push('/login')}
                 >
-                    <Text style={styles.secondaryButtonText}>Sign Up</Text>
+                    <Text style={styles.secondaryButtonText}>Sign In</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -63,6 +73,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         maxWidth: 400,
     },
+    logo: {
+        width: 120,
+        height: 120,
+        marginBottom: 20,
+    },
+    loadingIcon: {
+        width: 80,
+        height: 80,
+        marginBottom: 20,
+    },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
@@ -73,6 +93,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#666',
         marginBottom: 20,
+        textAlign: 'center'
     },
     description: {
         fontSize: 16,
