@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '@/utils/authContext';
 
@@ -18,6 +18,11 @@ export default function LandingPage() {
     if (!authContext?.isReady) {
         return (
             <View style={[styles.container, { justifyContent: 'center' }]}>
+                <Image 
+                    source={require('@/assets/images/icon.png')} 
+                    style={styles.loadingIcon}
+                    resizeMode="contain"
+                />
                 <Text style={styles.title}>Loading...</Text>
             </View>
         );
@@ -25,20 +30,24 @@ export default function LandingPage() {
     return (
         <View style={styles.container}>
             <View style={styles.content}>
+                <Image 
+                    source={require('@/assets/images/icon.png')} 
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
                 <Text style={styles.title}>SpokenHabit</Text>
                 <Text style={styles.subtitle}>
-                    Build better speaking habits
+                    Tracking your habits has never been easier
                 </Text>
                 <Text style={styles.description}>
-                    Practice and improve your speaking skills with personalized
-                    exercises and feedback.
+                    Speak your goals and let us help you achieve them.
                 </Text>
 
                 <TouchableOpacity
                     style={styles.primaryButton}
-                    // onPress={() => router.push('/signup')}
+                    onPress={() => router.push('/signup')}
                 >
-                    <Text style={styles.primaryButtonText}>Get Started</Text>
+                    <Text style={styles.primaryButtonText}>Sign Up</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -64,6 +73,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         maxWidth: 400,
     },
+    logo: {
+        width: 120,
+        height: 120,
+        marginBottom: 20,
+    },
+    loadingIcon: {
+        width: 80,
+        height: 80,
+        marginBottom: 20,
+    },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
@@ -74,6 +93,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#666',
         marginBottom: 20,
+        textAlign: 'center'
     },
     description: {
         fontSize: 16,
