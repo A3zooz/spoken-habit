@@ -8,7 +8,7 @@ A voice-controlled habit tracking and todo management app that lets you manage y
 [![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey.svg)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.79.5-blue.svg)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-~53.0.20-000020.svg)](https://expo.dev)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+<!--[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) -->
 
 ---
 
