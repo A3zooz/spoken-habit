@@ -396,20 +396,6 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Expo Team** for the amazing development platform
-- **Supabase** for the backend infrastructure
-- **React Native Community** for the ecosystem
-- **Contributors** who helped shape this project
-
----
 
 ## 📞 Support
 
