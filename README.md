@@ -16,12 +16,19 @@ A voice-controlled habit tracking and todo management app that lets you manage y
 <p align="center">
 
 <img width="500" height="1280" alt="image" src="https://github.com/user-attachments/assets/91f91050-313c-44a2-8d74-dc901803738f" />
+<br>
+<br>
   <img src="https://github.com/user-attachments/assets/fd0514e6-c4bc-4426-93be-568edb461cbb" alt="Demo" width="500"/>
-
+<br>
+<br>
 <!-- ![Screen_recording_20250811_151424](https://github.com/user-attachments/assets/fd0514e6-c4bc-4426-93be-568edb461cbb) -->
 <img  width="500" height="1280" alt="image" src="https://github.com/user-attachments/assets/283da2b1-3106-4296-8502-2ef51e5d9d87" />
+<br>
+<br>
 <!-- ![Screen_recording_20250811_151847](https://github.com/user-attachments/assets/7ac502c9-fdbb-4ac8-b65e-15a364d86122) -->
   <img src="https://github.com/user-attachments/assets/7ac502c9-fdbb-4ac8-b65e-15a364d86122" alt="Demo" width="500"/>
+  <br>
+<br>
 <!-- ![Screen_recording_20250811_151942](https://github.com/user-attachments/assets/e7729995-4b9e-429c-bd2c-0c7b7f9a5236) -->
   <img src="https://github.com/user-attachments/assets/e7729995-4b9e-429c-bd2c-0c7b7f9a5236" alt="Demo" width="500"/>
 </p>
