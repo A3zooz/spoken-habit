@@ -14,7 +14,7 @@ export default function TodosScreen() {
     const [showModal, setShowModal] = useState(false);
     const { backgroundColor, surfaceColor, textColor, borderColor } = useAppTheme();
     
-    const { tasks, fetchItems, toggleTask } = useItems('tasks');
+    const { tasks, fetchItems, toggleTask, deleteTask } = useItems('tasks');
     
     const voiceCommands = useVoiceCommands({
         actionType: 'add_task',
@@ -83,6 +83,7 @@ export default function TodosScreen() {
                     iconName="assignment"
                     emptyMessage="No tasks yet. Add one using voice commands!"
                     onToggle={toggleTask}
+                    onDelete={deleteTask}
                 />
             </ScrollView>
 

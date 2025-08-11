@@ -14,7 +14,7 @@ export default function HabitsScreen() {
     const [showModal, setShowModal] = useState(false);
     const { backgroundColor, surfaceColor, textColor, borderColor } = useAppTheme();
     
-    const { habits, fetchItems, toggleHabit } = useItems('habits');
+    const { habits, fetchItems, toggleHabit, deleteHabit } = useItems('habits');
     
     const voiceCommands = useVoiceCommands({
         actionType: 'add_habit',
@@ -83,6 +83,7 @@ export default function HabitsScreen() {
                     iconName="task-alt"
                     emptyMessage="No habits yet. Add one using voice commands!"
                     onToggle={toggleHabit}
+                    onDelete={deleteHabit}
                 />
             </ScrollView>
 

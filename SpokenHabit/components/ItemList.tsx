@@ -1,11 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from '@/constants/Colors';
 import { Habit, Task } from '@/utils/supabase';
+import { SwipeableItem } from '@/components/SwipeableItem';
 
 interface ItemListProps {
     items: Habit[] | Task[];
@@ -13,6 +14,7 @@ interface ItemListProps {
     iconName: 'task-alt' | 'assignment';
     emptyMessage: string;
     onToggle: (id: number) => void;
+    onDelete: (id: number) => void;
 }
 
 export const ItemList: React.FC<ItemListProps> = ({
@@ -21,6 +23,7 @@ export const ItemList: React.FC<ItemListProps> = ({
     iconName,
     emptyMessage,
     onToggle,
+    onDelete,
 }) => {
     const surfaceColor = useThemeColor(
         { light: Colors.light.surface, dark: Colors.dark.surface },
@@ -41,6 +44,18 @@ export const ItemList: React.FC<ItemListProps> = ({
     const borderColor = useThemeColor(
         { light: Colors.light.border, dark: Colors.dark.border },
         'border'
+    );
+
+    const renderItem = ({ item }: { item: Habit | Task }) => (
+        <SwipeableItem
+            item={item}
+            surfaceColor={surfaceColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            iconColor={iconColor}
+            onToggle={onToggle}
+            onDelete={onDelete}
+        />
     );
 
     return (
@@ -74,42 +89,13 @@ export const ItemList: React.FC<ItemListProps> = ({
                     </ThemedText>
                 </ThemedView>
             ) : (
-                items.map((item) => (
-                    <TouchableOpacity
-                        key={item.id}
-                        style={[
-                            styles.item,
-                            {
-                                backgroundColor: surfaceColor,
-                                borderColor: borderColor,
-                            },
-                        ]}
-                        onPress={() => onToggle(item.id)}
-                    >
-                        <MaterialIcons
-                            name={
-                                item.completed
-                                    ? 'check-circle'
-                                    : 'radio-button-unchecked'
-                            }
-                            size={24}
-                            color={
-                                item.completed
-                                    ? Colors.light.success
-                                    : iconColor
-                            }
-                        />
-                        <ThemedText
-                            style={[
-                                styles.itemText,
-                                { color: textColor },
-                                item.completed && styles.completedText,
-                            ]}
-                        >
-                            {item.name}
-                        </ThemedText>
-                    </TouchableOpacity>
-                ))
+                <FlatList
+                    data={items}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    scrollEnabled={false}
+                    showsVerticalScrollIndicator={false}
+                />
             )}
         </ThemedView>
     );
@@ -139,23 +125,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         opacity: 0.7,
-    },
-    item: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        marginBottom: 8,
-        gap: 12,
-    },
-    itemText: {
-        flex: 1,
-        fontSize: 16,
-        lineHeight: 22,
-    },
-    completedText: {
-        textDecorationLine: 'line-through',
-        opacity: 0.6,
     },
 });
